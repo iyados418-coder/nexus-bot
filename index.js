@@ -221,7 +221,18 @@ const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 8080;
 app.get('/', (req, res) => res.send('OK'));
-app.listen(PORT, () => logger.info(`Health server on port ${PORT}`));
+app.listen(PORT, () => {
+  logger.info(`Health server on port ${PORT}`);
+  if (process.env.RENDER_EXTERNAL_URL) {
+    setInterval(async () => {
+      try {
+        const res = await fetch(process.env.RENDER_EXTERNAL_URL);
+        if (res.ok) logger.info(`Keep-alive ping OK`);
+      } catch (_) {}
+    }, 4 * 60 * 1000);
+    logger.info('Keep-alive pinger started (every 4 min)');
+  }
+});
 
 process.on('unhandledRejection', (error) => {
   logger.error(`Unhandled rejection: ${error.message}`);
