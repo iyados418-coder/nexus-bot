@@ -1,0 +1,57 @@
+services:
+  - type: web
+    name: nexus-security-bot
+    runtime: node
+    repo: https://github.com/iyados418-coder/nexus-bot
+    branch: main
+    buildCommand: npm install
+    startCommand: node index.js
+    plan: free
+    envVars:
+      - key: DATA_DIR
+        value: /data
+      - key: SERVER_NAME
+        value: Nexus Security
+      - key: WEBSITE_URL
+        value: https://securityy.netlify.app
+      - key: GUILD_ID
+        value: "1504933159861485588"
+      - key: CLIENT_ID
+        value: "1506448238855716935"
+      - key: TICKET_CATEGORY_PURCHASE
+        value: "1506448755157766154"
+      - key: TICKET_CATEGORY_TECHNICAL
+        value: "1506450872375316641"
+      - key: TICKET_CATEGORY_PARTNERSHIP
+        value: "1506451029846130839"
+      - key: TICKET_CATEGORY_SECURITY
+        value: "1506451124952105193"
+      - key: TICKET_CATEGORY_STAFF
+        value: "1506451236218736710"
+      - key: ADMIN_ROLE_ID
+        value: "1506342414690947082"
+      - key: SUPPORT_ROLE_1_ID
+        value: "1506344009751335022"
+      - key: SUPPORT_ROLE_2_ID
+        value: "1506343641453559948"
+      - key: APPLICATION_MANAGER_ROLE_ID
+        value: "1506342414690947082"
+      - key: MANAGER_ROLE_ID
+        value: "1506346515617284236"
+      - key: LOG_CHANNEL_ID
+        value: "1506435955865813153"
+      - key: TICKET_PANEL_CHANNEL_ID
+        value: "1506372850997526660"
+      - key: WELCOME_CHANNEL_ID
+        value: "1506452297230581902"
+      - key: APPLICATION_SUBMIT_CHANNEL_ID
+        value: "1506460770165063781"
+      - key: APPLICATION_RESULTS_CHANNEL_ID
+        value: "1506411965256433694"
+      - key: VOICE_CHANNEL_ID
+        value: "1506374665151713482"
+      - key: TOKEN
+        sync: false
+disk:
+  name: nexus-data
+  mountPath: /data
