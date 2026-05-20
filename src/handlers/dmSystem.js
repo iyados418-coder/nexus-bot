@@ -3,6 +3,7 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  MessageFlags,
 } = require('discord.js');
 const config = require('../../config');
 const logger = require('../utils/logger');
@@ -28,7 +29,7 @@ async function logToChannel(client, data) {
 }
 
 async function handleDMUser(interaction) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   const client = getClient(interaction);
 
   try {
@@ -90,7 +91,7 @@ async function handleDMUser(interaction) {
 }
 
 async function handleDMAll(interaction) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   const client = getClient(interaction);
 
   try {

@@ -8,6 +8,7 @@ const {
   TextInputStyle,
   PermissionFlagsBits,
   ChannelType,
+  MessageFlags,
 } = require('discord.js');
 const config = require('../../config');
 const logger = require('../utils/logger');
@@ -227,8 +228,8 @@ async function handleTicketModal(interaction, client) {
   const reason = interaction.fields.getTextInputValue('ticket_reason');
   const catValue = interaction.customId.replace('ticket_reason_modal_', '');
   const category = config.ticketCategories.find((c) => c.value === catValue);
-  if (!category) return interaction.reply({ content: 'Invalid category.', ephemeral: true });
-  await interaction.deferReply({ ephemeral: true });
+  if (!category) return interaction.reply({ content: 'Invalid category.', flags: MessageFlags.Ephemeral });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   try {
     const channel = await createTicketChannel(interaction, client, category, reason);
     await interaction.editReply({ content: `Ticket created: ${channel}` });
@@ -249,6 +250,7 @@ async function handleTicketManager(interaction, client, persistCallback) {
   if (customId.startsWith('ticket_lock_')) return handleLock(interaction, client, persistCallback);
   if (customId.startsWith('ticket_unlock_')) return handleUnlock(interaction, client, persistCallback);
   if (customId.startsWith('ticket_add_')) return handleAddMember(interaction, client, persistCallback);
+  return interaction.reply({ content: 'Unknown button interaction.', flags: MessageFlags.Ephemeral }).catch(() => {});
 }
 
 async function handleRemind(interaction, client) {
@@ -257,9 +259,9 @@ async function handleRemind(interaction, client) {
     interaction.member.roles.cache.has(config.roles.manager) ||
     interaction.member.roles.cache.has(config.roles.support1) ||
     interaction.member.roles.cache.has(config.roles.support2);
-  if (!hasAccess) return interaction.reply({ content: 'No permission.', ephemeral: true });
+  if (!hasAccess) return interaction.reply({ content: 'No permission.', flags: MessageFlags.Ephemeral });
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   const ok = await sendReminderToOwner(client, channelId, interaction.member);
   if (ok) {
     const embed = new EmbedBuilder()
@@ -281,11 +283,11 @@ async function handleClaim(interaction, client, persist) {
     interaction.member.roles.cache.has(config.roles.support2);
 
   if (!hasAccess) {
-    return interaction.reply({ content: 'No permission to claim.', ephemeral: true });
+    return interaction.reply({ content: 'No permission to claim.', flags: MessageFlags.Ephemeral });
   }
 
   if (ticket.claimedBy && ticket.claimedBy !== interaction.user.id)
-    return interaction.reply({ content: `Already claimed by <@${ticket.claimedBy}>.`, ephemeral: true });
+    return interaction.reply({ content: `Already claimed by <@${ticket.claimedBy}>.`, flags: MessageFlags.Ephemeral });
 
   ticket.claimedBy = interaction.user.id;
   client.tickets.set(channelId, ticket);
@@ -305,7 +307,7 @@ async function handleClaim(interaction, client, persist) {
   });
 
   logger.info(`Ticket claimed: ${channelId} by ${interaction.user.tag}`);
-  return interaction.reply({ content: 'Ticket claimed.', ephemeral: true });
+  return interaction.reply({ content: 'Ticket claimed.', flags: MessageFlags.Ephemeral });
 }
 
 async function handleLock(interaction, client, persist) {
@@ -315,7 +317,7 @@ async function handleLock(interaction, client, persist) {
     interaction.member.roles.cache.has(config.roles.manager) ||
     interaction.member.roles.cache.has(config.roles.support1) ||
     interaction.member.roles.cache.has(config.roles.support2);
-  if (!hasAccess) return interaction.reply({ content: 'No permission to lock.', ephemeral: true });
+  if (!hasAccess) return interaction.reply({ content: 'No permission to lock.', flags: MessageFlags.Ephemeral });
 
   ticket.locked = true;
   client.tickets.set(channelId, ticket);
@@ -341,7 +343,7 @@ async function handleLock(interaction, client, persist) {
   });
 
   logger.info(`Ticket locked: ${channelId} by ${interaction.user.tag}`);
-  return interaction.reply({ content: 'Ticket locked.', ephemeral: true });
+  return interaction.reply({ content: 'Ticket locked.', flags: MessageFlags.Ephemeral });
 }
 
 async function handleUnlock(interaction, client, persist) {
@@ -351,7 +353,7 @@ async function handleUnlock(interaction, client, persist) {
     interaction.member.roles.cache.has(config.roles.manager) ||
     interaction.member.roles.cache.has(config.roles.support1) ||
     interaction.member.roles.cache.has(config.roles.support2);
-  if (!hasAccess) return interaction.reply({ content: 'No permission to unlock.', ephemeral: true });
+  if (!hasAccess) return interaction.reply({ content: 'No permission to unlock.', flags: MessageFlags.Ephemeral });
 
   ticket.locked = false;
   client.tickets.set(channelId, ticket);
@@ -377,7 +379,7 @@ async function handleUnlock(interaction, client, persist) {
   });
 
   logger.info(`Ticket unlocked: ${channelId} by ${interaction.user.tag}`);
-  return interaction.reply({ content: 'Ticket unlocked.', ephemeral: true });
+  return interaction.reply({ content: 'Ticket unlocked.', flags: MessageFlags.Ephemeral });
 }
 
 async function handleAddMember(interaction, client, persist) {
@@ -385,7 +387,7 @@ async function handleAddMember(interaction, client, persist) {
     interaction.member.roles.cache.has(config.roles.manager) ||
     interaction.member.roles.cache.has(config.roles.support1) ||
     interaction.member.roles.cache.has(config.roles.support2);
-  if (!hasAccess) return interaction.reply({ content: 'No permission.', ephemeral: true });
+  if (!hasAccess) return interaction.reply({ content: 'No permission.', flags: MessageFlags.Ephemeral });
 
   const modal = new ModalBuilder()
     .setCustomId(`ticket_add_member_modal_${interaction.channel.id}`)
@@ -400,7 +402,7 @@ async function handleAddMember(interaction, client, persist) {
 
 async function handleAddMemberModal(interaction, client, persist) {
   const targetId = interaction.fields.getTextInputValue('ticket_add_member_id');
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   try {
     const targetUser = await client.users.fetch(targetId);
     if (!targetUser) return interaction.editReply({ content: 'User not found.' });
@@ -442,8 +444,8 @@ async function handleClose(interaction, client, persist) {
   const isSupport2 = interaction.member.roles.cache.has(config.roles.support2);
   const isOwner = interaction.user.id === ticket.userId;
 
-  if (isUserClose && !isOwner) return interaction.reply({ content: 'You can only close your own tickets.', ephemeral: true });
-  if (!isUserClose && !isAdmin && !isSupport1 && !isSupport2) return interaction.reply({ content: 'No permission to close.', ephemeral: true });
+  if (isUserClose && !isOwner) return interaction.reply({ content: 'You can only close your own tickets.', flags: MessageFlags.Ephemeral });
+  if (!isUserClose && !isAdmin && !isSupport1 && !isSupport2) return interaction.reply({ content: 'No permission to close.', flags: MessageFlags.Ephemeral });
 
   const embed = new EmbedBuilder()
     .setColor(config.colors.orange)
@@ -483,14 +485,14 @@ async function handleClose(interaction, client, persist) {
   });
 
   logger.info(`Ticket closed: ${channelId} by ${interaction.user.tag}`);
-  return interaction.reply({ content: 'Ticket closed.', ephemeral: true });
+  return interaction.reply({ content: 'Ticket closed.', flags: MessageFlags.Ephemeral });
 }
 
 async function handleDelete(interaction, client, persist) {
   const channelId = interaction.customId.replace('ticket_delete_', '');
   const ticket = client.tickets.get(channelId) || {};
   if (!interaction.member.roles.cache.has(config.roles.admin) && !interaction.member.roles.cache.has(config.roles.manager))
-    return interaction.reply({ content: 'Only admins can delete tickets.', ephemeral: true });
+    return interaction.reply({ content: 'Only admins can delete tickets.', flags: MessageFlags.Ephemeral });
 
   await logToChannel(client, {
     title: 'Ticket Deleted', color: config.colors.red,
@@ -515,8 +517,8 @@ async function handleDelete(interaction, client, persist) {
 
 async function handleTranscript(interaction, client) {
   if (!interaction.member.roles.cache.has(config.roles.admin) && !interaction.member.roles.cache.has(config.roles.manager))
-    return interaction.reply({ content: 'Admins only.', ephemeral: true });
-  await interaction.deferReply({ ephemeral: true });
+    return interaction.reply({ content: 'Admins only.', flags: MessageFlags.Ephemeral });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   try {
     const messages = await interaction.channel.messages.fetch({ limit: 100 });
     const sorted = [...messages.values()].sort((a, b) => a.createdTimestamp - b.createdTimestamp);

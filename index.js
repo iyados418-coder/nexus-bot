@@ -1,6 +1,6 @@
 require('dotenv').config();
 const fs = require('fs');
-const { Client, GatewayIntentBits, ActivityType, REST, Routes } = require('discord.js');
+const { Client, GatewayIntentBits, ActivityType, REST, Routes, MessageFlags } = require('discord.js');
 const config = require('./config');
 const logger = require('./src/utils/logger');
 const { loadTickets, saveTickets } = require('./src/utils/ticketStore');
@@ -10,6 +10,7 @@ const { handleVoiceSystem } = require('./src/handlers/voiceSystem');
 const { handleWelcomeMessage } = require('./src/handlers/welcomeMessage');
 const { handleApplyPanel, handleAppStart, handleAppQuestion, handleAppAnswer, handleAppReview, handleAppReviewReason } = require('./src/handlers/applicationSystem');
 const { handleDMUser, handleDMAll } = require('./src/handlers/dmSystem');
+const { handleVerifyPanel, handleVerifyButton } = require('./src/handlers/verificationSystem');
 
 const client = new Client({
   intents: [
@@ -108,6 +109,11 @@ async function registerCommands() {
       ],
     },
     {
+      name: 'verify-panel',
+      description: 'Send the verification panel to the current channel',
+      default_member_permissions: '8',
+    },
+    {
       name: 'dm-all',
       description: 'Send a mass DM to all server members',
       default_member_permissions: '8',
@@ -136,13 +142,14 @@ client.on('interactionCreate', async (interaction) => {
       if (interaction.commandName === 'panel') return await handleTicketPanel(interaction);
       if (interaction.commandName === 'setup-voice') {
         const channel = interaction.options.getChannel('channel');
-        if (!channel) return interaction.reply({ content: 'Select a valid voice channel.', ephemeral: true });
-        await interaction.deferReply({ ephemeral: true });
+        if (!channel) return interaction.reply({ content: 'Select a valid voice channel.', flags: MessageFlags.Ephemeral });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         await handleVoiceSystem(client, channel);
         return interaction.editReply({ content: `Connected to ${channel.name}. 24/7 mode active.` });
       }
       if (interaction.commandName === 'apply-panel') return await handleApplyPanel(interaction);
       if (interaction.commandName === 'dm') return await handleDMUser(interaction);
+      if (interaction.commandName === 'verify-panel') return await handleVerifyPanel(interaction);
       if (interaction.commandName === 'dm-all') return await handleDMAll(interaction);
     }
 
@@ -158,15 +165,20 @@ client.on('interactionCreate', async (interaction) => {
     }
 
     if (interaction.isButton()) {
+      if (interaction.customId === 'verify_user') return await handleVerifyButton(interaction, client);
       if (interaction.customId === 'app_start') return await handleAppStart(interaction, client);
       if (interaction.customId.startsWith('app_q_')) return await handleAppQuestion(interaction, client);
       if (interaction.customId.startsWith('app_accept_') || interaction.customId.startsWith('app_reject_')) return await handleAppReview(interaction, client);
       return await handleTicketManager(interaction, client, persistTickets);
     }
+
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({ content: 'Unknown interaction type.', flags: MessageFlags.Ephemeral }).catch(() => {});
+    }
   } catch (error) {
     logger.error(`Interaction error: ${error.message}`);
     if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: 'An error occurred.', ephemeral: true }).catch(() => {});
+      await interaction.reply({ content: 'An error occurred.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 });

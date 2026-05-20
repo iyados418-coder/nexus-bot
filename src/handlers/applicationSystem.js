@@ -6,6 +6,7 @@ const {
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
+  MessageFlags,
 } = require('discord.js');
 const config = require('../../config');
 const logger = require('../utils/logger');
@@ -27,7 +28,7 @@ async function logToChannel(client, data) {
 }
 
 async function handleApplyPanel(interaction) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   try {
     const embed = new EmbedBuilder()
       .setColor(config.colors.white)
@@ -78,9 +79,8 @@ async function handleApplyPanel(interaction) {
 }
 
 async function handleAppStart(interaction, client) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   try {
-    await interaction.editReply({ content: 'Check your DMs to start the application process.' });
     const dmChannel = await interaction.user.createDM();
 
     const startEmbed = new EmbedBuilder()
@@ -110,9 +110,10 @@ async function handleAppStart(interaction, client) {
     );
 
     await dmChannel.send({ embeds: [startEmbed], components: [row] });
+    await interaction.editReply({ content: 'Check your DMs to start the application process.' });
   } catch (err) {
     logger.error(`App start DM error: ${err.message}`);
-    await interaction.editReply({ content: 'Could not send you a DM. Please enable DMs from server members and try again.' });
+    await interaction.editReply({ content: 'Could not send you a DM. Please enable DMs from server members and try again.' }).catch(() => {});
   }
 }
 
@@ -122,9 +123,9 @@ async function handleAppQuestion(interaction, client) {
   const stepIndex = parseInt(parts[3], 10);
 
   if (interaction.user.id !== userId)
-    return interaction.reply({ content: 'This application is not for you.', ephemeral: true });
+    return interaction.reply({ content: 'This application is not for you.', flags: MessageFlags.Ephemeral });
   if (stepIndex >= config.appQuestions.length)
-    return interaction.reply({ content: 'You have already completed the application.', ephemeral: true });
+    return interaction.reply({ content: 'You have already completed the application.', flags: MessageFlags.Ephemeral });
 
   const modal = new ModalBuilder()
     .setCustomId(`app_answer_${userId}_${stepIndex}`)
@@ -148,7 +149,7 @@ async function handleAppAnswer(interaction, client) {
   const stepIndex = parseInt(parts[3], 10);
 
   if (interaction.user.id !== userId)
-    return interaction.reply({ content: 'This application is not for you.', ephemeral: true });
+    return interaction.reply({ content: 'This application is not for you.', flags: MessageFlags.Ephemeral });
 
   const answer = interaction.fields.getTextInputValue('app_answer');
   const nextStep = stepIndex + 1;
@@ -161,7 +162,7 @@ async function handleAppAnswer(interaction, client) {
   app.answers[stepIndex] = answer;
   client.applications.set(userId, app);
 
-  await interaction.reply({ content: `Answer recorded for question ${stepIndex + 1}.`, ephemeral: true });
+  await interaction.reply({ content: `Answer recorded for question ${stepIndex + 1}.`, flags: MessageFlags.Ephemeral });
 
   if (nextStep >= config.appQuestions.length) {
     await submitApplication(interaction, client, userId, app);
@@ -274,7 +275,7 @@ async function handleAppReview(interaction, client) {
     interaction.member.roles.cache.has(config.roles.manager);
 
   if (!isManager) {
-    return interaction.reply({ content: 'Only application managers can review applications.', ephemeral: true });
+    return interaction.reply({ content: 'Only application managers can review applications.', flags: MessageFlags.Ephemeral });
   }
 
   const modal = new ModalBuilder()
@@ -300,12 +301,12 @@ async function handleAppReviewReason(interaction, client) {
   const reviewerId = parts[5];
 
   if (interaction.user.id !== reviewerId)
-    return interaction.reply({ content: 'This review session is not for you.', ephemeral: true });
+    return interaction.reply({ content: 'This review session is not for you.', flags: MessageFlags.Ephemeral });
 
   const reason = interaction.fields.getTextInputValue('app_review_reason');
   const isAccepted = action === 'accept';
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     const user = await client.users.fetch(applicantId).catch(() => null);

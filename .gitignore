@@ -1,3 +1,5 @@
 node_modules/
 .env
 *.log
+bot_output.*
+bot_error.*

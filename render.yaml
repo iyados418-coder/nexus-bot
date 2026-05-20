@@ -50,6 +50,10 @@ services:
         value: "1506411965256433694"
       - key: VOICE_CHANNEL_ID
         value: "1506374665151713482"
+      - key: VERIFIED_ROLE_ID
+        value: "1506344997174120662"
+      - key: VERIFY_LOG_CHANNEL_ID
+        value: "1506436039399571567"
       - key: TOKEN
         sync: false
 disk:

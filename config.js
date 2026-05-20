@@ -75,6 +75,7 @@ module.exports = {
     support1: process.env.SUPPORT_ROLE_1_ID,
     support2: process.env.SUPPORT_ROLE_2_ID,
     appManager: process.env.APPLICATION_MANAGER_ROLE_ID,
+    verified: process.env.VERIFIED_ROLE_ID,
   },
 
   channels: {
@@ -85,6 +86,7 @@ module.exports = {
     ticket: '1506372850997526660',
     appSubmit: process.env.APPLICATION_SUBMIT_CHANNEL_ID,
     appResults: process.env.APPLICATION_RESULTS_CHANNEL_ID,
+    verifyLog: process.env.VERIFY_LOG_CHANNEL_ID,
   },
 
   voiceChannelId: process.env.VOICE_CHANNEL_ID,

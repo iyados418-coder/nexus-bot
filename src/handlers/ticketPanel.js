@@ -8,12 +8,13 @@ const {
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
+  MessageFlags,
 } = require('discord.js');
 const config = require('../../config');
 const logger = require('../utils/logger');
 
 async function handleTicketPanel(interaction) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     const embed = new EmbedBuilder()
@@ -73,7 +74,7 @@ async function handleTicketSelect(interaction, client) {
   const category = config.ticketCategories.find((c) => c.value === selectedValue);
 
   if (!category) {
-    return interaction.reply({ content: 'Invalid category selected.', ephemeral: true });
+    return interaction.reply({ content: 'Invalid category selected.', flags: MessageFlags.Ephemeral });
   }
 
   const userTickets = client.tickets.filter(
@@ -83,7 +84,7 @@ async function handleTicketSelect(interaction, client) {
   if (userTickets.size >= config.maxTicketsPerUser) {
     return interaction.reply({
       content: `You already have ${config.maxTicketsPerUser} open tickets. Please close one first.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
@@ -91,7 +92,7 @@ async function handleTicketSelect(interaction, client) {
   if (dupCategory) {
     return interaction.reply({
       content: `You already have an open ticket in **${category.label}**.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
